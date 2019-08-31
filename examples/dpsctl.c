@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
 	if (lcd_brightness >= 0) {
 		rc = dps_brightness(lcd_brightness);
-		if (rc)
+		if (rc >= 0)
 			printf("Brightness set to %d\n", lcd_brightness);
 	}
 
@@ -130,9 +130,18 @@ int main(int argc, char *argv[])
 	}
 
 	if (c_query) {
-		rc = dps_query();
-		if (rc) {
+		query_t status;
+		rc = dps_query(&status);
+		if (rc > 0) {
 			printf("Status\n");
+			printf("Input voltage : %.2f\n", (double) status.v_in / 1000);
+			printf("Output voltage: %.2f\n", (double) status.v_out / 1000);
+			printf("Output current: %.3f\n", (double) status.i_out / 1000);
+			printf("Output        : %s\n"  , (status.output_enabled ? (status.temp_shutdown ? "temperature shutdown" : "ON") : "OFF"));
+			if (status.temp1 != -DBL_MAX)
+				printf("Temperature 1 : %.1f\n", status.temp1);
+			if (status.temp2 != -DBL_MAX)
+				printf("Temperature 2 : %.1f\n", status.temp2);
 		}
 	}
 }

@@ -107,6 +107,12 @@ void pack8(__uint8_t data, void *buf, int *idx) {
 	}
 }
 
+__uint16_t unpack16(void *buf) {
+	__uint8_t msb = *(__uint8_t *) buf;
+	__uint8_t lsb = *(__uint8_t *) (buf + 1);
+	return (msb << 8 | lsb);
+}
+
 int send_cmd(int fd, const void *cmd, int len) {
 	__uint8_t output[OUTPUT_BUFFER_SIZE];
 	int idx = 0;
@@ -276,7 +282,7 @@ int dps_current(int milliamp) {
 	return rc;
 }
 
-int dps_query() {
+int dps_query(query_t *result) {
 	__uint8_t cmd_buffer[] = { CMD_QUERY };
 	__uint8_t response_buffer[64];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
@@ -287,6 +293,25 @@ int dps_query() {
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
 	if (rc > 0) {
 		if (!response_ok(CMD_QUERY, &response_buffer)) return -EIO;
+		result->v_in = unpack16(response_buffer + 2);
+		result->v_out = unpack16(response_buffer + 4);
+		result->i_out = unpack16(response_buffer + 6);
+		result->output_enabled = *(__uint8_t *) (response_buffer + 8) == 1;
+		__uint16_t temp1 = unpack16(response_buffer + 9);
+		if (temp1 != 0xffff && temp1 & 0x8000) {
+			temp1 -= 0x10000;
+			result->temp1 = (double) temp1 / 10;
+		} else {
+			result->temp1 = -DBL_MAX;
+		}
+		__uint16_t temp2 = unpack16(response_buffer + 11);
+		if (temp2 != 0xffff && temp2 & 0x8000) {
+			temp2 -= 0x10000;
+			result->temp2 = (double) temp2 / 10;
+		} else {
+			result->temp2 = -DBL_MAX;
+		}
+		result->temp_shutdown = *(__uint8_t *) (response_buffer + 13) == 1;
 	}
 	return rc;
 }

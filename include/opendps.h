@@ -40,6 +40,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <float.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -80,9 +81,15 @@ const __uint8_t CMD_CHANGE_SCREEN = 0x15;
 const __uint8_t CMD_SET_BRIGHTNESS = 0x16;
 const __uint8_t CMD_RESPONSE = 0x80;
 
-typedef struct status_t {
-
-} status_t;
+typedef struct query_t {
+	bool temp_shutdown;
+	bool output_enabled;
+	long v_in;
+	long v_out;
+	long i_out;
+	double temp1;
+	double temp2;
+} query_t;
 
 static const unsigned short crc16tab[256]= {
 	0x0000,0x1021,0x2042,0x3063,0x4084,0x50a5,0x60c6,0x70e7,
