@@ -24,11 +24,12 @@ int main(int argc, char *argv[])
 	bool c_power_off = false;
 	bool c_query = false;
 	bool c_help = false;
+	bool c_upgrade = false;
 	int voltage = -1;
 	int current = -1;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "B:b:c:d:hlLoOpqvV:")) != -1) {
+	while ((opt = getopt(argc, argv, "B:b:c:d:hlLoOpqvV:U")) != -1) {
 		switch(opt) {
 			case 'B':
 				lcd_brightness = atoi(optarg);
@@ -69,26 +70,28 @@ int main(int argc, char *argv[])
 			case 'V':
 				voltage = atoi(optarg);
 				break;
+			case 'U':
+				c_upgrade = true;
+				break;
 			default: 
-				fprintf(stderr, "Usage: %s [-v] [-d device] [-b baudrate] [-B brightness] <-l | -L | -p>\n", argv[0]);
+				fprintf(stderr, "Usage: %s [-v] [-d device] [-b baudrate] [-B brightness] [-c current] [-V voltage] <-l | -L | -o | -O -p>\n", argv[0]);
 				exit(EXIT_FAILURE);
 		}
 	}
 
 	int rc = dps_init(serial_device, baudrate, verbose);
-	if (rc < 0)	
+	if (rc < 0)	{
+		printf("Failed to initialize %s\n", serial_device);
 		return rc;
+	}
 	
 
 	if (c_help) {
-		rc = dps_version();
-
-		return rc;
+		return dps_version();
 	}
 
 	if (c_ping) {
-		rc = dps_ping();
-		if (rc == 0) {
+		if (dps_ping() == 0) {
 			printf("Ping... OK\n");
 		} else {
 			printf("Ping... Failed (Error: %s)\n", "");
@@ -100,28 +103,29 @@ int main(int argc, char *argv[])
 	}
 
 	if (lcd_brightness >= 0) {
-		rc = dps_brightness(lcd_brightness);
-		if (rc >= 0)
+		if (dps_brightness(lcd_brightness) == 0)
 			printf("Brightness set to %d\n", lcd_brightness);
+		else
+			printf("Setting brightness failed\n");
 	}
 
 	if (voltage >= 0) {
-		dps_voltage(voltage);
+		if (dps_voltage(voltage) == 0)
+			printf("Voltage set to: %d mV\n", voltage);
 	}
 
 	if (current >= 0) {
-		dps_current(current);
+		if (dps_current(current) == 0)
+			printf("Current set to: %d mA\n", current);
 	}
 
 	if (c_power_on) {
-		rc = dps_power(true);
-		if (rc)
+		if (dps_power(true) == 0)
 			printf("Power output ON\n");
 	}
 
 	if (c_power_off) {
-		rc = dps_power(false);
-		if (rc)
+		if (dps_power(false) == 0)
 			printf("Power output OFF\n");
 	}
 
@@ -131,8 +135,7 @@ int main(int argc, char *argv[])
 
 	if (c_query) {
 		query_t status;
-		rc = dps_query(&status);
-		if (rc > 0) {
+		if (dps_query(&status) == 0) {
 			printf("Status\n");
 			printf("Input voltage : %.2f\n", (double) status.v_in / 1000);
 			printf("Output voltage: %.2f\n", (double) status.v_out / 1000);
@@ -143,5 +146,9 @@ int main(int argc, char *argv[])
 			if (status.temp2 != -DBL_MAX)
 				printf("Temperature 2 : %.1f\n", status.temp2);
 		}
+	}
+
+	if (c_upgrade) {
+		//TODO: implement
 	}
 }

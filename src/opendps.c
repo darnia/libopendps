@@ -204,7 +204,10 @@ int response_ok(__uint8_t cmd, const void *buf) {
 	__uint8_t cmd_resp = *(char *) buf;
 	__uint8_t cmd_succ = *(char *) (buf + 1);
 	//printf("%2.2x : %2.2x\n", cmd_resp, cmd_succ);
-	return (cmd_resp & CMD_RESPONSE) && ( cmd_resp ^ CMD_RESPONSE ) == cmd && cmd_succ == 1;
+	if ((cmd_resp & CMD_RESPONSE) && ( cmd_resp ^ CMD_RESPONSE ) == cmd && cmd_succ == 1)
+		return 0;
+	else
+		return -EIO;
 }
 
 int dps_ping() {
@@ -213,10 +216,9 @@ int dps_ping() {
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
 	if (rc < 0) 
 		return rc;
-	
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_LOCK, &response_buffer) : rc;
+	return (rc > 0) ? response_ok(CMD_PING, &response_buffer) : rc;
 }
 
 int dps_lock(bool enable) {
@@ -279,7 +281,7 @@ int dps_current(int milliamp) {
 	}
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return rc;
+	return (rc > 0) ? response_ok(CMD_SET_PARAMETERS, &response_buffer) : rc;
 }
 
 int dps_query(query_t *result) {
@@ -312,6 +314,7 @@ int dps_query(query_t *result) {
 			result->temp2 = -DBL_MAX;
 		}
 		result->temp_shutdown = *(__uint8_t *) (response_buffer + 13) == 1;
+		return 0;
 	}
 	return rc;
 }
@@ -332,4 +335,11 @@ int dps_version() {
 		printf("\n");
 	}
 	return 0;
+}
+
+int dps_upgrade(char *fw_file_name) {
+	int chunk_size = 1024;
+	//calc
+	__uint8_t cmd_buffer[] = { CMD_UPGRADE_START };
+	__uint8_t response_buffer[32];
 }
