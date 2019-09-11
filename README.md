@@ -1,4 +1,4 @@
-# libopendps
+# libopendps (WiP)
 
 A library for controlling [OpenDPS](https://github.com/kanflo/opendps) via UART.
 
