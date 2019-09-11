@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Lasse K. Mikkelsen (github.com/lkmikkel)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "opendps.h"
 
 static bool verbose = false;
@@ -7,17 +31,18 @@ int set_serial_attribs(int speed)
 {
 	struct termios tty;
 
-	if (tcgetattr(fd, &tty) < 0) {
+	if (tcgetattr(fd, &tty) < 0)
+	{
 		printf("Error from tcgetattr: %s\n", strerror(errno));
 		return -1;
 	}
 
-	tty.c_cflag |= (CLOCAL | CREAD);    /* ignore modem controls */
+	tty.c_cflag |= (CLOCAL | CREAD); /* ignore modem controls */
 	tty.c_cflag &= ~CSIZE;
-	tty.c_cflag |= CS8;         /* 8-bit characters */
-	tty.c_cflag &= ~PARENB;     /* no parity bit */
-	tty.c_cflag &= ~CSTOPB;     /* only need 1 stop bit */
-	tty.c_cflag &= ~CRTSCTS;    /* no hardware flowcontrol */
+	tty.c_cflag |= CS8;		 /* 8-bit characters */
+	tty.c_cflag &= ~PARENB;  /* no parity bit */
+	tty.c_cflag &= ~CSTOPB;  /* only need 1 stop bit */
+	tty.c_cflag &= ~CRTSCTS; /* no hardware flowcontrol */
 
 	/* setup for non-canonical mode */
 	tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
@@ -33,55 +58,60 @@ int set_serial_attribs(int speed)
 
 	tcflush(fd, TCIOFLUSH); // flush input and output buffers before use
 
-	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+	if (tcsetattr(fd, TCSANOW, &tty) != 0)
+	{
 		printf("Error from tcsetattr: %s\n", strerror(errno));
 		return -1;
 	}
 	return 0;
 }
 
-int get_baud(int baudrate) {
-	switch(baudrate) {
-		case 0:
-			return B0;
-		case 50:
-			return B50;
-		case 75:
-			return B75;
-		case 110:
-			return B110;
-		case 134:
-			return B134;
-		case 150:
-			return B150;
-		case 200:
-			return B200;
-		case 1200:
-			return B1200;
-		case 1800:
-			return B1800;
-		case 2400:
-			return B2400;
-		case 4800:
-			return B4800;
-		case 9600:
-			return B9600;
-		case 19200:
-			return B19200;
-		case 38400:
-			return B38400;
-		case 57600:
-			return B57600;
-		default:
-			return B115200;
+int get_baud(int baudrate)
+{
+	switch (baudrate)
+	{
+	case 0:
+		return B0;
+	case 50:
+		return B50;
+	case 75:
+		return B75;
+	case 110:
+		return B110;
+	case 134:
+		return B134;
+	case 150:
+		return B150;
+	case 200:
+		return B200;
+	case 1200:
+		return B1200;
+	case 1800:
+		return B1800;
+	case 2400:
+		return B2400;
+	case 4800:
+		return B4800;
+	case 9600:
+		return B9600;
+	case 19200:
+		return B19200;
+	case 38400:
+		return B38400;
+	case 57600:
+		return B57600;
+	default:
+		return B115200;
 	}
 }
 
-int dps_init(const char *serial_device, int baud_rate, bool pverbose) {
+int dps_init(const char *serial_device, int baud_rate, bool pverbose)
+{
 	verbose = pverbose;
 
 	fd = open(serial_device, O_RDWR | O_NOCTTY | O_SYNC);
-	if (fd < 0) {
+	if (fd < 0)
+	{
 		printf("Error opening %s: %s\n", serial_device, strerror(errno));
 		return fd;
 	}
@@ -93,17 +123,21 @@ unsigned short crc16_ccitt(const void *buf, int len)
 {
 	register int counter;
 	register unsigned short crc = 0;
-	for( counter = 0; counter < len; counter++)
-		crc = (crc<<8) ^ crc16tab[((crc>>8) ^ *(char *)buf++)&0x00FF];
+	for (counter = 0; counter < len; counter++)
+		crc = (crc << 8) ^ crc16tab[((crc >> 8) ^ *(char *)buf++) & 0x00FF];
 	return crc;
 }
 
-void pack8(__uint8_t data, void *buf, int *idx) {
-	if (data == _SOF || data == _DLE || data == _EOF) {
-		*(__uint8_t *) (buf + (*idx)++) = _DLE;
-		*(__uint8_t *) (buf + (*idx)++) = data ^ _XOR;
-	} else {
-		*(__uint8_t *) (buf + (*idx)++) = data;
+void pack8(__uint8_t data, void *buf, int *idx)
+{
+	if (data == _SOF || data == _DLE || data == _EOF)
+	{
+		*(__uint8_t *)(buf + (*idx)++) = _DLE;
+		*(__uint8_t *)(buf + (*idx)++) = data ^ _XOR;
+	}
+	else
+	{
+		*(__uint8_t *)(buf + (*idx)++) = data;
 	}
 }
 
@@ -120,16 +154,18 @@ int send_cmd(int fd, const void *cmd, int len) {
 	unsigned short crc = crc16_ccitt(cmd, len);
 	// Build request
 	output[idx++] = _SOF;
-	for (int i = 0; i < len; i++) {
-		pack8(*(char *) (cmd + i), &output, &idx);
+	for (int i = 0; i < len; i++)
+	{
+		pack8(*(char *)(cmd + i), &output, &idx);
 	}
 	pack8((crc >> 8), &output, &idx);
 	pack8((crc & 0xff), &output, &idx);
 	output[idx++] = _EOF;
 	int cmd_size = idx;
-	if (verbose) {
+	if (verbose)
+	{
 		printf("TX %d bytes [", idx);
-		for (char *p = output; idx-- > 0; p++)
+		for (__uint8_t *p = output; idx-- > 0; p++)
 			printf(" %2.2x", (*p & 0xff));
 		printf(" ]\n");
 	}
@@ -139,7 +175,8 @@ int send_cmd(int fd, const void *cmd, int len) {
 }
 
 //FIXME: please clean this shit up
-int get_response(int fd, void *output_buffer, int buf_size) {
+int get_response(int fd, void *output_buffer, int buf_size)
+{
 	__uint8_t input_buf[INPUT_BUFFER_SIZE];
 	int buf_idx = 0;
 	int len = 0;
@@ -149,60 +186,86 @@ int get_response(int fd, void *output_buffer, int buf_size) {
 	bool dle = false;
 	memset(input_buf, 0x00, sizeof(input_buf)); // clear buffer
 
-	do {
+	do
+	{
 		len = read(fd, &input_buf[buf_idx], sizeof(input_buf) - buf_idx);
 		// printf("read: %d\n", len);
-		if (len > 0) {
+		if (len > 0)
+		{
 			buf_idx += len;
 		}
 	} while (len > 0);
 
-	if (buf_idx > buf_size) {
+	if (buf_idx > buf_size)
+	{
 		return -EIO;
-	} else if (buf_idx > 0) {
-		unsigned char   *p;
-		unsigned char   *cmd_begin = NULL;
+	}
+	else if (buf_idx > 0)
+	{
+		unsigned char *p;
+		unsigned char *cmd_begin = NULL;
 		int cmd_len = 0;
-		if (verbose) printf("RX %d bytes [", buf_idx);
-		for (p = input_buf; buf_idx-- > 0; p++) {
-			if (verbose) printf(" %2.2x", *p);
-			if (*p == _SOF) {
+		if (verbose)
+			printf("RX %d bytes [", buf_idx);
+		for (p = input_buf; buf_idx-- > 0; p++)
+		{
+			if (verbose)
+				printf(" %2.2x", *p);
+			if (*p == _SOF)
+			{
 				cmd_begin = p + 1;
-			} else if (cmd_begin != NULL) {
-				if (*p == _EOF) {
-					if ((p - 2) > cmd_begin) {
+			}
+			else if (cmd_begin != NULL)
+			{
+				if (*p == _EOF)
+				{
+					if ((p - 2) > cmd_begin)
+					{
 						// get crc16
-						unsigned short crc16 = ( *(p-2) << 8 ) | ( *(p-1) & 0xff );
+						unsigned short crc16 = (*(p - 2) << 8) | (*(p - 1) & 0xff);
 						cmd_len = (p - 2) - cmd_begin;
 						// calc crc16 and compare
 						crc_ok = crc16 == crc16_ccitt(cmd_begin, cmd_len);
 					}
-				} else if (*p == _DLE) {
+				}
+				else if (*p == _DLE)
+				{
 					dle = true;
-				} else {
-					if (dle) {
-						*(char *) (output_buffer + idx++) = *p ^ _XOR;
+				}
+				else
+				{
+					if (dle)
+					{
+						*(char *)(output_buffer + idx++) = *p ^ _XOR;
 						dle = false;
-					} else {
-						*(char *) (output_buffer + idx++)  = *p;
+					}
+					else
+					{
+						*(char *)(output_buffer + idx++) = *p;
 					}
 				}
 			}
 		}
-		if (verbose) printf(" ] %s\n\n", (crc_ok ? "CRC OK" : "CRC FAILED") );
+		if (verbose)
+			printf(" ] %s\n\n", (crc_ok ? "CRC OK" : "CRC FAILED"));
 		return (crc_ok ? (idx - 2) : -EIO);
-	} else if (len < 0) {
+	}
+	else if (len < 0)
+	{
 		printf("Error from read: %d: %s\n", len, strerror(errno));
 		return errno;
-	} else {  /* len == 0 timeout */
+	}
+	else
+	{ /* len == 0 timeout */
 		printf("Error from read: %d: %s\n", len, "timeout");
 		return -ETIMEDOUT;
 	}
 }
 
-int response_ok(__uint8_t cmd, const void *buf) {
-	__uint8_t cmd_resp = *(char *) buf;
-	__uint8_t cmd_succ = *(char *) (buf + 1);
+int response_ok(__uint8_t cmd, const void *buf)
+{
+	__uint8_t cmd_resp = *(char *)buf;
+	__uint8_t cmd_succ = *(char *)(buf + 1);
 	//printf("%2.2x : %2.2x\n", cmd_resp, cmd_succ);
 	if ((cmd_resp & CMD_RESPONSE) && ( cmd_resp ^ CMD_RESPONSE ) == cmd && cmd_succ == 1)
 		return 0;
@@ -210,30 +273,33 @@ int response_ok(__uint8_t cmd, const void *buf) {
 		return -EIO;
 }
 
-int dps_ping() {
-	__uint8_t cmd_buffer[] = { CMD_PING };
+int dps_ping()
+{
+	__uint8_t cmd_buffer[] = {CMD_PING};
 	__uint8_t response_buffer[32];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0) 
+	if (rc < 0)
 		return rc;
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
 	return (rc > 0) ? response_ok(CMD_PING, &response_buffer) : rc;
 }
 
-int dps_lock(bool enable) {
-	__uint8_t cmd_buffer[] = { CMD_LOCK, enable ? 1 : 0 };
+int dps_lock(bool enable)
+{
+	__uint8_t cmd_buffer[] = {CMD_LOCK, enable ? 1 : 0};
 	__uint8_t response_buffer[32];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0) 
+	if (rc < 0)
 		return rc;
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
 	return (rc > 0) ? response_ok(CMD_LOCK, &response_buffer) : rc;
 }
 
-int dps_brightness(int brightness) {
-	__uint8_t cmd_buffer[] = { CMD_SET_BRIGHTNESS, brightness };
+int dps_brightness(int brightness)
+{
+	__uint8_t cmd_buffer[] = {CMD_SET_BRIGHTNESS, brightness};
 	__uint8_t response_buffer[32];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
 	if (rc < 0)
@@ -243,8 +309,9 @@ int dps_brightness(int brightness) {
 	return (rc > 0) ? response_ok(CMD_SET_BRIGHTNESS, &response_buffer) : rc;
 }
 
-int dps_power(bool enable) {
-	__uint8_t cmd_buffer[] = { CMD_ENABLE_OUTPUT, enable ? 1 : 0 };
+int dps_power(bool enable)
+{
+	__uint8_t cmd_buffer[] = {CMD_ENABLE_OUTPUT, enable ? 1 : 0};
 	__uint8_t response_buffer[32];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
 	if (rc < 0)
@@ -254,14 +321,16 @@ int dps_power(bool enable) {
 	return (rc > 0) ? response_ok(CMD_ENABLE_OUTPUT, &response_buffer) : rc;
 }
 
-int dps_voltage(int millivol) {
+int dps_voltage(int millivol)
+{
 	__uint8_t cmd_buffer[18];
 	__uint8_t response_buffer[32];
-	int size = sprintf(cmd_buffer, "%cu%c%d", CMD_SET_PARAMETERS, '\0', millivol);
+	int size = sprintf((char *)cmd_buffer, "%cu%c%d", CMD_SET_PARAMETERS, '\0', millivol);
 	if (size < 0)
 		return -EIO;
 	int rc = send_cmd(fd, cmd_buffer, size);
-	if (rc < 0) {
+	if (rc < 0)
+	{
 		return rc;
 	}
 
@@ -269,14 +338,16 @@ int dps_voltage(int millivol) {
 	return (rc > 0) ? response_ok(CMD_SET_PARAMETERS, &response_buffer) : rc;
 }
 
-int dps_current(int milliamp) {
+int dps_current(int milliamp)
+{
 	__uint8_t cmd_buffer[18];
 	__uint8_t response_buffer[32];
-	int size = sprintf(cmd_buffer, "%ci%c%d", CMD_SET_PARAMETERS, '\0', milliamp);
+	int size = sprintf((char *)cmd_buffer, "%ci%c%d", CMD_SET_PARAMETERS, '\0', milliamp);
 	if (size < 0)
 		return -EIO;
 	int rc = send_cmd(fd, cmd_buffer, size);
-	if (rc < 0) {
+	if (rc < 0)
+	{
 		return rc;
 	}
 
@@ -288,9 +359,8 @@ int dps_query(query_t *result) {
 	__uint8_t cmd_buffer[] = { CMD_QUERY };
 	__uint8_t response_buffer[64];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0) 
+	if (rc < 0)
 		return rc;
-	
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
 	if (rc > 0) {
@@ -319,17 +389,21 @@ int dps_query(query_t *result) {
 	return rc;
 }
 
-int dps_version() {
-	__uint8_t cmd_buffer[] = { CMD_VERSION };
+int dps_version()
+{
+	__uint8_t cmd_buffer[] = {CMD_VERSION};
 	__uint8_t response_buffer[32];
 	int res = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (res < 0) {
+	if (res < 0)
+	{
 		return res;
 	}
 
 	int size = get_response(fd, &response_buffer, sizeof(response_buffer));
-	if (size > 0) {
-		for (int i=0; i < size; i++) {
+	if (size > 0 && response_ok(CMD_VERSION, &response_buffer))
+	{
+		for (int i = 0; i < size; i++)
+		{
 			printf(" 0x%2.2x", response_buffer[i]);
 		}
 		printf("\n");

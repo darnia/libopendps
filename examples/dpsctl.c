@@ -1,5 +1,29 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Lasse K. Mikkelsen (github.com/lkmikkel)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <errno.h>
-#include <fcntl.h> 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -7,7 +31,6 @@
 #include <termios.h>
 #include <unistd.h>
 #include "opendps.h"
-
 
 // argument
 
@@ -25,6 +48,7 @@ int main(int argc, char *argv[])
 	bool c_query = false;
 	bool c_help = false;
 	bool c_upgrade = false;
+	bool c_version = false;
 	int voltage = -1;
 	int current = -1;
 	int opt;
@@ -80,18 +104,18 @@ int main(int argc, char *argv[])
 	}
 
 	int rc = dps_init(serial_device, baudrate, verbose);
-	if (rc < 0)	{
-		printf("Failed to initialize %s\n", serial_device);
+	if (rc < 0)
 		return rc;
-	}
-	
 
 	if (c_help) {
-		return dps_version();
+		rc = dps_version();
+
+		return rc;
 	}
 
 	if (c_ping) {
-		if (dps_ping() == 0) {
+		rc = dps_ping();
+		if (rc == 0) {
 			printf("Ping... OK\n");
 		} else {
 			printf("Ping... Failed (Error: %s)\n", "");
@@ -103,7 +127,8 @@ int main(int argc, char *argv[])
 	}
 
 	if (lcd_brightness >= 0) {
-		if (dps_brightness(lcd_brightness) == 0)
+		rc = dps_brightness(lcd_brightness);
+		if (rc)
 			printf("Brightness set to %d\n", lcd_brightness);
 		else
 			printf("Setting brightness failed\n");
@@ -134,8 +159,9 @@ int main(int argc, char *argv[])
 	}
 
 	if (c_query) {
-		query_t status;
-		if (dps_query(&status) == 0) {
+		query_t status;	
+		rc = dps_query(&status);
+		if (rc) {
 			printf("Status\n");
 			printf("Input voltage : %.2f\n", (double) status.v_in / 1000);
 			printf("Output voltage: %.2f\n", (double) status.v_out / 1000);
@@ -150,5 +176,14 @@ int main(int argc, char *argv[])
 
 	if (c_upgrade) {
 		//TODO: implement
+	}
+
+	if (c_version) {
+		//TODO: implement
+		rc = dps_version();
+		if (rc) {
+			printf("Boot version: \n");
+			printf("App version: \n");
+		}
 	}
 }
