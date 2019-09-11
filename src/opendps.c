@@ -141,8 +141,13 @@ void pack8(__uint8_t data, void *buf, int *idx)
 	}
 }
 
-int send_cmd(int fd, const void *cmd, int len)
-{
+__uint16_t unpack16(void *buf) {
+	__uint8_t msb = *(__uint8_t *) buf;
+	__uint8_t lsb = *(__uint8_t *) (buf + 1);
+	return (msb << 8 | lsb);
+}
+
+int send_cmd(int fd, const void *cmd, int len) {
 	__uint8_t output[OUTPUT_BUFFER_SIZE];
 	int idx = 0;
 	// calc CRC16
@@ -262,7 +267,10 @@ int response_ok(__uint8_t cmd, const void *buf)
 	__uint8_t cmd_resp = *(char *)buf;
 	__uint8_t cmd_succ = *(char *)(buf + 1);
 	//printf("%2.2x : %2.2x\n", cmd_resp, cmd_succ);
-	return (cmd_resp & CMD_RESPONSE) && (cmd_resp ^ CMD_RESPONSE) == cmd && cmd_succ == 1;
+	if ((cmd_resp & CMD_RESPONSE) && ( cmd_resp ^ CMD_RESPONSE ) == cmd && cmd_succ == 1)
+		return 0;
+	else
+		return -EIO;
 }
 
 int dps_ping()
@@ -274,7 +282,7 @@ int dps_ping()
 		return rc;
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_LOCK, &response_buffer) : rc;
+	return (rc > 0) ? response_ok(CMD_PING, &response_buffer) : rc;
 }
 
 int dps_lock(bool enable)
@@ -344,22 +352,39 @@ int dps_current(int milliamp)
 	}
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return rc;
+	return (rc > 0) ? response_ok(CMD_SET_PARAMETERS, &response_buffer) : rc;
 }
 
-int dps_query()
-{
-	__uint8_t cmd_buffer[] = {CMD_QUERY};
+int dps_query(query_t *result) {
+	__uint8_t cmd_buffer[] = { CMD_QUERY };
 	__uint8_t response_buffer[64];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
 	if (rc < 0)
 		return rc;
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	if (rc > 0)
-	{
-		if (!response_ok(CMD_QUERY, &response_buffer))
-			return -EIO;
+	if (rc > 0) {
+		if (!response_ok(CMD_QUERY, &response_buffer)) return -EIO;
+		result->v_in = unpack16(response_buffer + 2);
+		result->v_out = unpack16(response_buffer + 4);
+		result->i_out = unpack16(response_buffer + 6);
+		result->output_enabled = *(__uint8_t *) (response_buffer + 8) == 1;
+		__uint16_t temp1 = unpack16(response_buffer + 9);
+		if (temp1 != 0xffff && temp1 & 0x8000) {
+			temp1 -= 0x10000;
+			result->temp1 = (double) temp1 / 10;
+		} else {
+			result->temp1 = -DBL_MAX;
+		}
+		__uint16_t temp2 = unpack16(response_buffer + 11);
+		if (temp2 != 0xffff && temp2 & 0x8000) {
+			temp2 -= 0x10000;
+			result->temp2 = (double) temp2 / 10;
+		} else {
+			result->temp2 = -DBL_MAX;
+		}
+		result->temp_shutdown = *(__uint8_t *) (response_buffer + 13) == 1;
+		return 0;
 	}
 	return rc;
 }
@@ -384,4 +409,11 @@ int dps_version()
 		printf("\n");
 	}
 	return 0;
+}
+
+int dps_upgrade(char *fw_file_name) {
+	int chunk_size = 1024;
+	//calc
+	__uint8_t cmd_buffer[] = { CMD_UPGRADE_START };
+	__uint8_t response_buffer[32];
 }
