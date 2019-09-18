@@ -16,6 +16,4 @@ set(DPSCTL_SRCS
 add_executable( dpsctl ${DPSCTL_SRCS} )
 set_target_properties(dpsctl PROPERTIES COMPILE_FLAGS "-Wall -Wformat-nonliteral")
 target_link_libraries( dpsctl opendps )
-#install (TARGETS dpsctl DESTINATION bin)
-
-
+install (TARGETS dpsctl DESTINATION bin)
