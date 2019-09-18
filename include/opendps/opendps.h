@@ -85,9 +85,9 @@ const __uint8_t CMD_RESPONSE 			= 0x80;
 typedef struct query_t {
 	bool temp_shutdown;
 	bool output_enabled;
-	long v_in;
-	long v_out;
-	long i_out;
+	__uint16_t v_in;
+	__uint16_t v_out;
+	__uint16_t i_out;
 	double temp1;
 	double temp2;
 } query_t;
