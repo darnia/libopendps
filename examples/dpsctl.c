@@ -123,12 +123,12 @@ int main(int argc, char *argv[])
 	}
 
 	if (c_unlock) {
-		printf("DPS %s\n", dps_lock(false) ? "unlocked" : "failed to unlock");
+		printf("DPS %s\n", dps_lock(false) == 0 ? "unlocked" : "failed to unlock");
 	}
 
 	if (lcd_brightness >= 0) {
 		rc = dps_brightness(lcd_brightness);
-		if (rc)
+		if (rc == 0)
 			printf("Brightness set to %d\n", lcd_brightness);
 		else
 			printf("Setting brightness failed\n");
@@ -155,13 +155,12 @@ int main(int argc, char *argv[])
 	}
 
 	if (c_lock) {
-		printf("DPS %s\n", dps_lock(true) ? "locked" : "failed to lock");
+		printf("DPS %s\n", dps_lock(true) == 0 ? "locked" : "failed to lock");
 	}
 
 	if (c_query) {
 		query_t status;	
-		rc = dps_query(&status);
-		if (rc) {
+		if (dps_query(&status) == 0) {
 			printf("Status\n");
 			printf("Input voltage : %.2f\n", (double) status.v_in / 1000);
 			printf("Output voltage: %.2f\n", (double) status.v_out / 1000);
