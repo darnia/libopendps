@@ -15,5 +15,9 @@ set(DPSCTL_SRCS
 
 add_executable( dpsctl ${DPSCTL_SRCS} )
 set_target_properties(dpsctl PROPERTIES COMPILE_FLAGS "-Wall -Wformat-nonliteral")
-target_link_libraries( dpsctl opendps )
-install (TARGETS dpsctl DESTINATION bin)
+target_include_directories (opendps PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(dpsctl LINK_PUBLIC opendps)
+
+install(TARGETS opendps DESTINATION lib)
+install(FILES opendps/opendps.h DESTINATION include)
+install(TARGETS dpsctl DESTINATION bin)
