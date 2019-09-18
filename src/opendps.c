@@ -264,8 +264,8 @@ int get_response(int fd, void *output_buffer, int buf_size)
 
 int response_ok(__uint8_t cmd, const void *buf)
 {
-	__uint8_t cmd_resp = *(char *)buf;
-	__uint8_t cmd_succ = *(char *)(buf + 1);
+	__uint8_t cmd_resp = *(__uint8_t *)buf;
+	__uint8_t cmd_succ = *(__uint8_t *)(buf + 1);
 	//printf("%2.2x : %2.2x\n", cmd_resp, cmd_succ);
 	if ((cmd_resp & CMD_RESPONSE) && ( cmd_resp ^ CMD_RESPONSE ) == cmd && cmd_succ == 1)
 		return 0;
@@ -364,7 +364,7 @@ int dps_query(query_t *result) {
 
 	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
 	if (rc > 0) {
-		if (!response_ok(CMD_QUERY, &response_buffer)) return -EIO;
+		if (response_ok(CMD_QUERY, &response_buffer) != 0) return -EIO;
 		result->v_in = unpack16(response_buffer + 2);
 		result->v_out = unpack16(response_buffer + 4);
 		result->i_out = unpack16(response_buffer + 6);
