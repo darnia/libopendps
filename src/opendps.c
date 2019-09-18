@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include "opendps.h"
+#include "opendps/opendps.h"
 
 static bool verbose = false;
 static int fd = -1;

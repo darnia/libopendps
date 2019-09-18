@@ -30,7 +30,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include "opendps.h"
+#include "opendps/opendps.h"
 
 // argument
 

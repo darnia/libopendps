@@ -5,9 +5,6 @@ include(GNUInstallDirs)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_library(opendps SHARED src/opendps.c)
-set_target_properties(opendps PROPERTIES
-    SOVERSION 1
-    PUBLIC_HEADER opendps/opendps.h)
 
 set(DPSCTL_SRCS
   examples/dpsctl.c
@@ -19,5 +16,5 @@ target_include_directories (opendps PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(dpsctl LINK_PUBLIC opendps)
 
 install(TARGETS opendps DESTINATION lib)
-install(FILES opendps/opendps.h DESTINATION include)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/opendps/opendps.h DESTINATION include/opendps)
 install(TARGETS dpsctl DESTINATION bin)
