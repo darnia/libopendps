@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
 	int baudrate = B115200;
 	int lcd_brightness = -1;
 	bool verbose = false;
+	bool c_display_main = false;
+	bool c_display_setting = false;
 	bool c_lock = false;
 	bool c_unlock = false;
 	bool c_ping = false;
@@ -58,7 +60,7 @@ int main(int argc, char *argv[])
 	int current = -1;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "B:b:c:d:hilLoOpqvV:U")) != -1) {
+	while ((opt = getopt(argc, argv, "B:b:c:d:hilLmoOpsqvV:U")) != -1) {
 		switch(opt) {
 			case 'B':
 				lcd_brightness = atoi(optarg);
@@ -84,6 +86,9 @@ int main(int argc, char *argv[])
 			case 'L':
 				c_lock = true;
 				break;
+			case 'm':
+				c_display_main = true;
+				break;
 			case 'o':
 				c_power_off = true;
 				break;
@@ -92,6 +97,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'p':
 				c_ping = true;
+				break;
+			case 's':
+				c_display_setting = true;
 				break;
 			case 'q':
 				c_query = true;
@@ -173,6 +181,14 @@ int main(int argc, char *argv[])
 		printf("DPS %s\n", dps_lock(true) == 0 ? "locked" : "failed to lock");
 	}
 
+	if (c_display_main) {
+		printf("DPS change screen %s\n", dps_change_screen(SCREEN_MAIN) == 0 ? "to main" : "failed");
+	}
+
+	if (c_display_setting) {
+		printf("DPS change screen %s\n", dps_change_screen(SCREEN_SETTINGS) == 0 ? "to settings" : "failed");
+	}
+	
 	if (c_query) {
 		dps_query_t status;	
 		if (dps_query(&status) == 0) {

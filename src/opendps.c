@@ -397,6 +397,18 @@ int dps_query(dps_query_t *result) {
 	return rc;
 }
 
+int dps_change_screen(__uint8_t screen) 
+{
+        __uint8_t cmd_buffer[] = {CMD_CHANGE_SCREEN, screen};
+        __uint8_t response_buffer[32];
+        int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+        if (rc < 0)
+                return rc;
+
+        rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+        return (rc > 0) ? response_ok(CMD_CHANGE_SCREEN, &response_buffer) : rc;
+}
+
 int dps_version(dps_version_t *version)
 {
         __uint8_t cmd_buffer[] = {CMD_VERSION};                                                                                                                                                                

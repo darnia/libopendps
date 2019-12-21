@@ -82,6 +82,10 @@ const __uint8_t CMD_CHANGE_SCREEN 		= 0x15;
 const __uint8_t CMD_SET_BRIGHTNESS 		= 0x16;
 const __uint8_t CMD_RESPONSE 			= 0x80;
 
+// options for cmd_change_screen                                                                                                                                                                               
+const __uint8_t SCREEN_MAIN 			= 0;
+const __uint8_t SCREEN_SETTINGS 		= 1;
+
 typedef struct query_t {
 	bool temp_shutdown;
 	bool output_enabled;
@@ -139,6 +143,7 @@ int dps_power(bool poweron);
 int dps_voltage(int millivol);
 int dps_current(int milliamp);
 int dps_query(dps_query_t *result);
+int dps_change_screen(__uint8_t screen);
 int dps_version(dps_version_t *version);
 
 #ifdef __cplusplus
