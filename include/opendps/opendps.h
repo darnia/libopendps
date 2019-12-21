@@ -50,7 +50,7 @@ extern "C"
 #define INPUT_BUFFER_SIZE 128
 #define OUTPUT_BUFFER_SIZE 20
 
-	// OPENDPS protocol
+// OPENDPS protocol
 
 #define _SOF 0x7e
 #define _DLE 0x7d
@@ -58,13 +58,13 @@ extern "C"
 #define _EOF 0x7f
 
 // OpenDPS commands
-const __uint8_t CMD_PING 				= 0x01;
+const __uint8_t CMD_PING			= 0x01;
 //const __uint8_t CMD_SET_VOUT 			= 0x02; // obsolete
 //const __uint8_t CMD_SET_ILIMIT 		= 0x03; // obsolete
-const __uint8_t CMD_QUERY 				= 0x04;
+const __uint8_t CMD_QUERY			= 0x04;
 //const __uint8_t CMD_POWER_ENABLE 		= 0x05; // obsolete
 const __uint8_t CMD_WIFI_STATUS 		= 0x06;
-const __uint8_t CMD_LOCK 				= 0x07;
+const __uint8_t CMD_LOCK 			= 0x07;
 const __uint8_t CMD_OCP_EVENT 			= 0x08;
 const __uint8_t CMD_UPGRADE_START 		= 0x09;
 const __uint8_t CMD_UPGRADE_DATA 		= 0x0a;
@@ -72,12 +72,12 @@ const __uint8_t CMD_SET_FUNCTION 		= 0x0b;
 const __uint8_t CMD_ENABLE_OUTPUT 		= 0x0c;
 const __uint8_t CMD_LIST_FUNCTIONS 		= 0x0d;
 const __uint8_t CMD_SET_PARAMETERS 		= 0x0e;
-const __uint8_t CMD_LIST_PARAMETERS 	= 0x0f;
-const __uint8_t CMD_TEMPERATURE_REPORT 	= 0x10;
+const __uint8_t CMD_LIST_PARAMETERS 		= 0x0f;
+const __uint8_t CMD_TEMPERATURE_REPORT 		= 0x10;
 const __uint8_t CMD_VERSION 			= 0x11;
 const __uint8_t CMD_CAL_REPORT 			= 0x12;
-const __uint8_t CMD_SET_CALIBRATION 	= 0x13;
-const __uint8_t CMD_CLEAR_CALIBRATION 	= 0x14;
+const __uint8_t CMD_SET_CALIBRATION 		= 0x13;
+const __uint8_t CMD_CLEAR_CALIBRATION 		= 0x14;
 const __uint8_t CMD_CHANGE_SCREEN 		= 0x15;
 const __uint8_t CMD_SET_BRIGHTNESS 		= 0x16;
 const __uint8_t CMD_RESPONSE 			= 0x80;
@@ -91,6 +91,11 @@ typedef struct query_t {
 	double temp1;
 	double temp2;
 } query_t;
+
+typedef struct version_t {                                                                                                                                                                                     
+        char *bootloader_ver;                                                                                                                                                                                  
+        char *firmware_ver;
+} dps_version_t;
 
 static const unsigned short crc16tab[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -134,7 +139,7 @@ int dps_power(bool poweron);
 int dps_voltage(int millivol);
 int dps_current(int milliamp);
 int dps_query(query_t *result);
-int dps_version();
+int dps_version(dps_version_t *version);
 
 #ifdef __cplusplus
 }

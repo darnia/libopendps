@@ -147,6 +147,14 @@ __uint16_t unpack16(void *buf) {
 	return (msb << 8 | lsb);
 }
 
+char* unpack_cstr(void *buf, int *idx)                                                                 
+{                                                                                                      
+        char *char_buf = (char*) buf;                                                                  
+        char *buf_start = char_buf + *idx;                                                             
+        while ( char_buf[(*idx)++] != '\0');                                                           
+        return buf_start;                                                                              
+}
+
 int send_cmd(int fd, const void *cmd, int len) {
 	__uint8_t output[OUTPUT_BUFFER_SIZE];
 	int idx = 0;
@@ -389,26 +397,24 @@ int dps_query(query_t *result) {
 	return rc;
 }
 
-int dps_version()
+int dps_version(dps_version_t *version)
 {
-	__uint8_t cmd_buffer[] = {CMD_VERSION};
-	__uint8_t response_buffer[32];
-	int res = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (res < 0)
-	{
-		return res;
-	}
-
-	int size = get_response(fd, &response_buffer, sizeof(response_buffer));
-	if (size > 0 && response_ok(CMD_VERSION, &response_buffer))
-	{
-		for (int i = 0; i < size; i++)
-		{
-			printf(" 0x%2.2x", response_buffer[i]);
-		}
-		printf("\n");
-	}
-	return 0;
+        __uint8_t cmd_buffer[] = {CMD_VERSION};                                                                                                                                                                
+        __uint8_t response_buffer[32];                                                                                                                                                                         
+        int res = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));                                                                                                                                                
+        if (res < 0)                                                                                                                                                                                           
+                return res;                                                                                                                                                                                    
+                                                                                                                                                                                                               
+        int size = get_response(fd, &response_buffer, sizeof(response_buffer));                                                                                                                                
+        if (size >= 13 && response_ok(CMD_VERSION, &response_buffer) == 0)                                                                                                                                     
+        {                                                                                                                                                                                                      
+                int idx = 2;                                                                                                                                                                                   
+                version->bootloader_ver = strdup(unpack_cstr(response_buffer, &idx));
+                version->firmware_ver = strdup(unpack_cstr(response_buffer, &idx));
+                return 0;                                                                                                                                                                                      
+        } else {                                                                                                                                                                                               
+                return -EIO;                                                                                                                                                                                   
+        }                                                                          
 }
 
 int dps_upgrade(char *fw_file_name) {

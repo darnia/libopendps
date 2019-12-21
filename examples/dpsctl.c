@@ -34,6 +34,11 @@
 
 // argument
 
+void print_usage(char *program)
+{
+	fprintf(stderr, "Usage: %s [-v] [-i] [-d device] [-b baudrate] [-B brightness] [-c current] [-V voltage] <-l | -L | -o | -O -p>\n", program);
+}
+
 int main(int argc, char *argv[])
 {
 	char *serial_device = "/dev/ttyUSB0";
@@ -53,7 +58,7 @@ int main(int argc, char *argv[])
 	int current = -1;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "B:b:c:d:hlLoOpqvV:U")) != -1) {
+	while ((opt = getopt(argc, argv, "B:b:c:d:hilLoOpqvV:U")) != -1) {
 		switch(opt) {
 			case 'B':
 				lcd_brightness = atoi(optarg);
@@ -69,6 +74,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'h':
 				c_help = true;
+				break;
+			case 'i':
+				c_version = true;
 				break;
 			case 'l':
 				c_unlock = true;
@@ -98,7 +106,7 @@ int main(int argc, char *argv[])
 				c_upgrade = true;
 				break;
 			default: 
-				fprintf(stderr, "Usage: %s [-v] [-d device] [-b baudrate] [-B brightness] [-c current] [-V voltage] <-l | -L | -o | -O -p>\n", argv[0]);
+				print_usage(argv[0]);
 				exit(EXIT_FAILURE);
 		}
 	}
@@ -107,11 +115,18 @@ int main(int argc, char *argv[])
 	if (rc < 0)
 		return rc;
 
-	if (c_help) {
-		rc = dps_version();
-
-		return rc;
-	}
+        if (c_version) {
+                dps_version_t version;
+                rc = dps_version(&version);
+                if (rc == 0) {
+                        printf("Boot version : %s\n", version.bootloader_ver);
+                        printf("App version  : %s\n", version.firmware_ver);
+                        free(version.bootloader_ver);
+                        free(version.firmware_ver);
+                } else {
+                        printf("Failed to get versions from DPS\n");
+                }
+        }
 
 	if (c_ping) {
 		rc = dps_ping();
@@ -177,12 +192,7 @@ int main(int argc, char *argv[])
 		//TODO: implement
 	}
 
-	if (c_version) {
-		//TODO: implement
-		rc = dps_version();
-		if (rc) {
-			printf("Boot version: \n");
-			printf("App version: \n");
-		}
+	if (c_help) {
+		print_usage(argv[0]);
 	}
 }
