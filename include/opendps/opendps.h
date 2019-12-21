@@ -90,7 +90,7 @@ typedef struct query_t {
 	__uint16_t i_out;
 	double temp1;
 	double temp2;
-} query_t;
+} dps_query_t;
 
 typedef struct version_t {                                                                                                                                                                                     
         char *bootloader_ver;                                                                                                                                                                                  
@@ -138,7 +138,7 @@ int dps_brightness(int brightness);
 int dps_power(bool poweron);
 int dps_voltage(int millivol);
 int dps_current(int milliamp);
-int dps_query(query_t *result);
+int dps_query(dps_query_t *result);
 int dps_version(dps_version_t *version);
 
 #ifdef __cplusplus

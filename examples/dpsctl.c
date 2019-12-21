@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (c_query) {
-		query_t status;	
+		dps_query_t status;	
 		if (dps_query(&status) == 0) {
 			printf("Status\n");
 			printf("Input voltage : %.2f\n", (double) status.v_in / 1000);

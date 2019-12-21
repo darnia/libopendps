@@ -363,7 +363,7 @@ int dps_current(int milliamp)
 	return (rc > 0) ? response_ok(CMD_SET_PARAMETERS, &response_buffer) : rc;
 }
 
-int dps_query(query_t *result) {
+int dps_query(dps_query_t *result) {
 	__uint8_t cmd_buffer[] = { CMD_QUERY };
 	__uint8_t response_buffer[64];
 	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
