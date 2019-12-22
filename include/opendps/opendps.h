@@ -41,6 +41,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <float.h>
+#include <arpa/inet.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -82,9 +83,22 @@ const __uint8_t CMD_CHANGE_SCREEN 		= 0x15;
 const __uint8_t CMD_SET_BRIGHTNESS 		= 0x16;
 const __uint8_t CMD_RESPONSE 			= 0x80;
 
+const __uint8_t CMD_STATUS_SUCC			= 0x01;
+
+// Upgrade status                                                                                                                                                                                              
+const __uint8_t UPGRADE_CONTINUE 		= 0;
+const __uint8_t UPGRADE_BOOTCOM_ERROR 		= 1;
+const __uint8_t UPGRADE_CRC_ERROR 		= 2;
+const __uint8_t UPGRADE_ERASE_ERROR 		= 3;
+const __uint8_t UPGRADE_FLASH_ERROR 		= 4;
+const __uint8_t UPGRADE_OVERFLOW_ERROR 		= 5;
+const __uint8_t UPGRADE_SUCCESS 		= 16;
+
 // options for cmd_change_screen                                                                                                                                                                               
 const __uint8_t SCREEN_MAIN 			= 0;
 const __uint8_t SCREEN_SETTINGS 		= 1;
+
+typedef void (*cb_upgrade_progress) (__uint8_t);
 
 typedef struct query_t {
 	bool temp_shutdown;
@@ -145,6 +159,7 @@ int dps_current(int milliamp);
 int dps_query(dps_query_t *result);
 int dps_change_screen(__uint8_t screen);
 int dps_version(dps_version_t *version);
+int dps_upgrade(char *fw_file_name, cb_upgrade_progress progress);
 
 #ifdef __cplusplus
 }

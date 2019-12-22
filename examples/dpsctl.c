@@ -34,6 +34,12 @@
 
 // argument
 
+static void print_upgrade_progress(__uint8_t progress)
+{
+	printf("Firmware upgrading: %3d%%\r", progress);
+	fflush(stdout);
+}
+
 void print_usage(char *program)
 {
 	fprintf(stderr, "Usage: %s [-v] [-i] [-d device] [-b baudrate] [-B brightness] [-c current] [-V voltage] <-l | -L | -o | -O -p>\n", program);
@@ -42,6 +48,7 @@ void print_usage(char *program)
 int main(int argc, char *argv[])
 {
 	char *serial_device = "/dev/ttyUSB0";
+	char *firmware_file = NULL;
 	int baudrate = B115200;
 	int lcd_brightness = -1;
 	bool verbose = false;
@@ -60,7 +67,7 @@ int main(int argc, char *argv[])
 	int current = -1;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "B:b:c:d:hilLmoOpsqvV:U")) != -1) {
+	while ((opt = getopt(argc, argv, "B:b:c:d:hilLmoOpsqvV:U:")) != -1) {
 		switch(opt) {
 			case 'B':
 				lcd_brightness = atoi(optarg);
@@ -112,6 +119,7 @@ int main(int argc, char *argv[])
 				break;
 			case 'U':
 				c_upgrade = true;
+				firmware_file = optarg;
 				break;
 			default: 
 				print_usage(argv[0]);
@@ -122,6 +130,16 @@ int main(int argc, char *argv[])
 	int rc = dps_init(serial_device, baudrate, verbose);
 	if (rc < 0)
 		return rc;
+
+	if (c_upgrade) {
+		cb_upgrade_progress cb_prog = print_upgrade_progress;
+		rc = dps_upgrade(firmware_file, cb_prog);
+		if (rc == 0)
+			printf("\nDPS firmware upgraded successful.\n");
+		else
+			printf("\nDPS firmware upgrade failed.\n");
+		return rc;
+	}
 
         if (c_version) {
                 dps_version_t version;
