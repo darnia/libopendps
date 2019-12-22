@@ -50,6 +50,7 @@ extern "C"
 
 #define INPUT_BUFFER_SIZE 128
 #define OUTPUT_BUFFER_SIZE 20
+#define MAX_RETRY 3
 
 // OPENDPS protocol
 

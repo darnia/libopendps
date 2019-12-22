@@ -51,7 +51,7 @@ int set_serial_attribs(int speed)
 
 	/* fetch bytes as they become available */
 	tty.c_cc[VMIN] = 0;
-	tty.c_cc[VTIME] = 5; // 0.5 sec.
+	tty.c_cc[VTIME] = 1; // 0.1 sec.
 
 	cfsetospeed(&tty, (speed_t)speed);
 	cfsetispeed(&tty, (speed_t)speed);
@@ -222,21 +222,37 @@ int get_response(int fd, void *output_buffer, int buf_size)
 	__uint8_t input;
 	bool crc_ok = false;
 	bool dle = false;
+	bool eof = false;
+	int max_fetches = 10;
 	memset(input_buf, 0x00, sizeof(input_buf)); // clear buffer
-
 	do
 	{
 		len = read(fd, &input_buf[buf_idx], sizeof(input_buf) - buf_idx);
-		// printf("read: %d\n", len);
 		if (len > 0)
 		{
+			if (verbose)
+				printf("Buffer: ");
+			for (int i=buf_idx; i < (buf_idx + len); i++) {
+				if (verbose)
+					printf(" %2.2x", input_buf[i]);
+				if (input_buf[i] == _EOF) {
+					eof = true;
+					break;
+				}
+			}
+			if (verbose)
+				printf("\n");
 			buf_idx += len;
 		}
-	} while (len > 0);
+		if (len == 0)
+			max_fetches--;
+		if (verbose)
+			printf("Read input: %d, total: %d, fetches: %d, EOF: %d\n", len, buf_idx, max_fetches, eof);
+	} while (!eof && max_fetches > 0);
 
 	if (buf_idx > buf_size)
 	{
-		return -EIO;
+		return -ENOBUFS;
 	}
 	else if (buf_idx > 0)
 	{
@@ -286,7 +302,7 @@ int get_response(int fd, void *output_buffer, int buf_size)
 		}
 		if (verbose)
 			printf(" ] %s\n\n", (crc_ok ? "CRC OK" : "CRC FAILED"));
-		return (crc_ok ? (idx - 2) : -EIO);
+		return (crc_ok ? (idx - 2) : -EPROTO);
 	}
 	else if (len < 0)
 	{
@@ -315,120 +331,170 @@ int dps_ping()
 {
 	__uint8_t cmd_buffer[] = {CMD_PING};
 	__uint8_t response_buffer[32];
-	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0)
-		return rc;
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+		rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+		if (rc < 0)
+			return rc;
 
-	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_PING, &response_buffer, CMD_STATUS_SUCC) : rc;
+		rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+		if (rc > 0 && response_ok(CMD_PING, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return rc;
 }
 
 int dps_lock(bool enable)
 {
 	__uint8_t cmd_buffer[] = {CMD_LOCK, enable ? 1 : 0};
 	__uint8_t response_buffer[32];
-	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0)
-		return rc;
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+		rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+		if (rc < 0)
+			return rc;
 
-	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_LOCK, &response_buffer, CMD_STATUS_SUCC) : rc;
+		rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+		if (rc > 0 && response_ok(CMD_LOCK, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return rc;
 }
 
 int dps_brightness(int brightness)
 {
 	__uint8_t cmd_buffer[] = {CMD_SET_BRIGHTNESS, brightness};
 	__uint8_t response_buffer[32];
-	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0)
-		return rc;
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+		rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+		if (rc < 0)
+			return rc;
 
-	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_SET_BRIGHTNESS, &response_buffer, CMD_STATUS_SUCC) : rc;
+		rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+		if (rc > 0 && response_ok(CMD_SET_BRIGHTNESS, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return rc;
 }
 
 int dps_power(bool enable)
 {
 	__uint8_t cmd_buffer[] = {CMD_ENABLE_OUTPUT, enable ? 1 : 0};
 	__uint8_t response_buffer[32];
-	int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-	if (rc < 0)
-		return rc;
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+		rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+		if (rc < 0)
+			return rc;
 
-	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_ENABLE_OUTPUT, &response_buffer, CMD_STATUS_SUCC) : rc;
+		rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+		if (rc > 0 && response_ok(CMD_ENABLE_OUTPUT, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return rc;
 }
 
 int dps_voltage(int millivol)
 {
 	__uint8_t cmd_buffer[18];
 	__uint8_t response_buffer[32];
-	int size = sprintf((char *)cmd_buffer, "%cu%c%d", CMD_SET_PARAMETERS, '\0', millivol);
-	if (size < 0)
-		return -EIO;
-	int rc = send_cmd(fd, cmd_buffer, size);
-	if (rc < 0)
-	{
-		return rc;
-	}
-
-	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_SET_PARAMETERS, &response_buffer, CMD_STATUS_SUCC) : rc;
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+		int size = sprintf((char *)cmd_buffer, "%cu%c%d", CMD_SET_PARAMETERS, '\0', millivol);
+		if (size < 0)
+			return -EIO;
+		rc = send_cmd(fd, cmd_buffer, size);
+		if (rc < 0)
+			return rc;
+	
+		rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+		if (rc > 0 && response_ok(CMD_SET_PARAMETERS, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while (retry >= 0);
+	return rc;
 }
 
 int dps_current(int milliamp)
 {
 	__uint8_t cmd_buffer[18];
 	__uint8_t response_buffer[32];
-	int size = sprintf((char *)cmd_buffer, "%ci%c%d", CMD_SET_PARAMETERS, '\0', milliamp);
-	if (size < 0)
-		return -EIO;
-	int rc = send_cmd(fd, cmd_buffer, size);
-	if (rc < 0)
-	{
-		return rc;
-	}
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+		int size = sprintf((char *)cmd_buffer, "%ci%c%d", CMD_SET_PARAMETERS, '\0', milliamp);
+		if (size < 0)
+			return -EIO;
+		rc = send_cmd(fd, cmd_buffer, size);
+		if (rc < 0)
+			return rc;
 
-	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-	return (rc > 0) ? response_ok(CMD_SET_PARAMETERS, &response_buffer, CMD_STATUS_SUCC) : rc;
+		rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+		if (rc > 0 && response_ok(CMD_SET_PARAMETERS, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return rc;
 }
 
 int dps_query(dps_query_t *result) {
         __uint8_t cmd_buffer[] = { CMD_QUERY };
-        __uint8_t response_buffer[64];
-        int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-        if (rc < 0)
-                return rc;
+        __uint8_t response_buffer[128];
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+        	rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+        	if (rc < 0)
+                	return rc;
 
-        rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-        if (rc > 0) {
-                if (response_ok(CMD_QUERY, &response_buffer, CMD_STATUS_SUCC) != 0) return -EIO;
-                int idx = 2;
-                result->v_in = unpack16(response_buffer, &idx);
-                result->v_out = unpack16(response_buffer, &idx);
-                result->i_out = unpack16(response_buffer, &idx);
-                result->output_enabled = (response_buffer[idx++] == 1);
-                __uint16_t temp1 = unpack16(response_buffer, &idx);
-                if (temp1 != 0xffff && temp1 & 0x8000) {
-                        temp1 -= 0x10000;
-                        result->temp1 = (double) temp1 / 10;
-                } else {
-                        result->temp1 = -DBL_MAX;
-                }
-                __uint16_t temp2 = unpack16(response_buffer, &idx);
-                if (temp2 != 0xffff && temp2 & 0x8000) {
-                        temp2 -= 0x10000;
-                        result->temp2 = (double) temp2 / 10;
-                } else {
-                        result->temp2 = -DBL_MAX;
-                }
-                result->temp_shutdown = (response_buffer[idx++] == 1);
+        	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+        	if (rc > 0) {
+                	if (response_ok(CMD_QUERY, &response_buffer, CMD_STATUS_SUCC) != 0) return -EIO;
+                	int idx = 2;
+                	result->v_in = unpack16(response_buffer, &idx);
+                	result->v_out = unpack16(response_buffer, &idx);
+                	result->i_out = unpack16(response_buffer, &idx);
+                	result->output_enabled = (response_buffer[idx++] == 1);
+                	__uint16_t temp1 = unpack16(response_buffer, &idx);
+                	if (temp1 != 0xffff && temp1 & 0x8000) {
+                        	temp1 -= 0x10000;
+                        	result->temp1 = (double) temp1 / 10;
+                	} else {
+                        	result->temp1 = -DBL_MAX;
+                	}
+                	__uint16_t temp2 = unpack16(response_buffer, &idx);
+                	if (temp2 != 0xffff && temp2 & 0x8000) {
+                        	temp2 -= 0x10000;
+                        	result->temp2 = (double) temp2 / 10;
+                	} else {
+                        	result->temp2 = -DBL_MAX;
+                	}
+                	result->temp_shutdown = (response_buffer[idx++] == 1);
                 //while (idx < rc) {
                 //      char *key = unpack_cstr(response_buffer, &idx);
                 //      char *val = unpack_cstr(response_buffer, &idx);
                 //}
-                return 0;
-        }
+                	return 0;
+        	}
+		rc = -EPROTO;
+		retry--;
+	} while (retry >= 0);
         return rc;
 }
 
@@ -436,32 +502,45 @@ int dps_change_screen(__uint8_t screen)
 {
         __uint8_t cmd_buffer[] = {CMD_CHANGE_SCREEN, screen};
         __uint8_t response_buffer[32];
-        int rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-        if (rc < 0)
-                return rc;
+	int retry = MAX_RETRY;
+	int rc;
+	do {
+        	rc = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+        	if (rc < 0)
+                	return rc;
 
-        rc = get_response(fd, &response_buffer, sizeof(response_buffer));
-        return (rc > 0) ? response_ok(CMD_CHANGE_SCREEN, &response_buffer, CMD_STATUS_SUCC) : rc;
+        	rc = get_response(fd, &response_buffer, sizeof(response_buffer));
+        	if (rc > 0 && response_ok(CMD_CHANGE_SCREEN, &response_buffer, CMD_STATUS_SUCC) == 0)
+			return 0;
+		rc = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return rc;
 }
 
 int dps_version(dps_version_t *version)
 {
         __uint8_t cmd_buffer[] = {CMD_VERSION};
-        __uint8_t response_buffer[32];
-        int res = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
-        if (res < 0)
-                return res;
+        __uint8_t response_buffer[128];
+	int retry = MAX_RETRY;
+	int res;
+	do {
+        	res = send_cmd(fd, cmd_buffer, sizeof(cmd_buffer));
+        	if (res < 0)
+                	return res;
 
-        int size = get_response(fd, &response_buffer, sizeof(response_buffer));
-        if (size >= 13 && response_ok(CMD_VERSION, &response_buffer, CMD_STATUS_SUCC) == 0)
-        {
-                int idx = 2;
-                version->bootloader_ver = strdup(unpack_cstr(response_buffer, &idx));
-                version->firmware_ver = strdup(unpack_cstr(response_buffer, &idx));
-                return 0;
-        } else {
-                return -EIO;
-        }
+        	int size = get_response(fd, &response_buffer, sizeof(response_buffer));
+        	if (size >= 13 && response_ok(CMD_VERSION, &response_buffer, CMD_STATUS_SUCC) == 0)
+        	{
+                	int idx = 2;
+                	version->bootloader_ver = strdup(unpack_cstr(response_buffer, &idx));
+                	version->firmware_ver = strdup(unpack_cstr(response_buffer, &idx));
+                	return 0;
+        	}
+		res = -EPROTO;
+		retry--;
+	} while(retry >= 0);
+	return res;
 }
 
 int dps_upgrade(char *fw_file_name, cb_upgrade_progress progress)
