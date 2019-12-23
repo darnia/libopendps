@@ -243,8 +243,7 @@ int get_response(int fd, void *output_buffer, int buf_size)
 			if (verbose)
 				printf("\n");
 			buf_idx += len;
-		}
-		if (len == 0)
+		} else if (len == 0)
 			max_fetches--;
 		if (verbose)
 			printf("Read input: %d, total: %d, fetches: %d, EOF: %d\n", len, buf_idx, max_fetches, eof);
@@ -414,7 +413,7 @@ int dps_voltage(int millivol)
 	int retry = MAX_RETRY;
 	int rc;
 	do {
-		int size = sprintf((char *)cmd_buffer, "%cu%c%d", CMD_SET_PARAMETERS, '\0', millivol);
+		int size = sprintf((char *)cmd_buffer, "%cu%c%d%c", CMD_SET_PARAMETERS, '\0', millivol, '\0');
 		if (size < 0)
 			return -EIO;
 		rc = send_cmd(fd, cmd_buffer, size);
@@ -437,7 +436,7 @@ int dps_current(int milliamp)
 	int retry = MAX_RETRY;
 	int rc;
 	do {
-		int size = sprintf((char *)cmd_buffer, "%ci%c%d", CMD_SET_PARAMETERS, '\0', milliamp);
+		int size = sprintf((char *)cmd_buffer, "%ci%c%d%c", CMD_SET_PARAMETERS, '\0', milliamp, '\0');
 		if (size < 0)
 			return -EIO;
 		rc = send_cmd(fd, cmd_buffer, size);
