@@ -5,8 +5,13 @@ A library for controlling [OpenDPS](https://github.com/kanflo/opendps) via UART.
 ## How to build
 ```
 mkdir build && cd build
-cmake ..
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr ..
 make
+```
+
+## Install
+```
+sudo make install
 ```
 
 ## Command line utility
