@@ -60,44 +60,44 @@ extern "C"
 #define _EOF 0x7f
 
 // OpenDPS commands
-const __uint8_t CMD_PING			= 0x01;
-//const __uint8_t CMD_SET_VOUT 			= 0x02; // obsolete
-//const __uint8_t CMD_SET_ILIMIT 		= 0x03; // obsolete
-const __uint8_t CMD_QUERY			= 0x04;
-//const __uint8_t CMD_POWER_ENABLE 		= 0x05; // obsolete
-const __uint8_t CMD_WIFI_STATUS 		= 0x06;
-const __uint8_t CMD_LOCK 			= 0x07;
-const __uint8_t CMD_OCP_EVENT 			= 0x08;
-const __uint8_t CMD_UPGRADE_START 		= 0x09;
-const __uint8_t CMD_UPGRADE_DATA 		= 0x0a;
-const __uint8_t CMD_SET_FUNCTION 		= 0x0b;
-const __uint8_t CMD_ENABLE_OUTPUT 		= 0x0c;
-const __uint8_t CMD_LIST_FUNCTIONS 		= 0x0d;
-const __uint8_t CMD_SET_PARAMETERS 		= 0x0e;
-const __uint8_t CMD_LIST_PARAMETERS 		= 0x0f;
-const __uint8_t CMD_TEMPERATURE_REPORT 		= 0x10;
-const __uint8_t CMD_VERSION 			= 0x11;
-const __uint8_t CMD_CAL_REPORT 			= 0x12;
-const __uint8_t CMD_SET_CALIBRATION 		= 0x13;
-const __uint8_t CMD_CLEAR_CALIBRATION 		= 0x14;
-const __uint8_t CMD_CHANGE_SCREEN 		= 0x15;
-const __uint8_t CMD_SET_BRIGHTNESS 		= 0x16;
-const __uint8_t CMD_RESPONSE 			= 0x80;
+static const __uint8_t CMD_PING				= 0x01;
+//static const __uint8_t CMD_SET_VOUT 			= 0x02; // obsolete
+//static const __uint8_t CMD_SET_ILIMIT 		= 0x03; // obsolete
+static const __uint8_t CMD_QUERY			= 0x04;
+//const __uint8_t CMD_POWER_ENABLE 			= 0x05; // obsolete
+static const __uint8_t CMD_WIFI_STATUS 			= 0x06;
+static const __uint8_t CMD_LOCK 			= 0x07;
+static const __uint8_t CMD_OCP_EVENT 			= 0x08;
+static const __uint8_t CMD_UPGRADE_START 		= 0x09;
+static const __uint8_t CMD_UPGRADE_DATA 		= 0x0a;
+static const __uint8_t CMD_SET_FUNCTION 		= 0x0b;
+static const __uint8_t CMD_ENABLE_OUTPUT 		= 0x0c;
+static const __uint8_t CMD_LIST_FUNCTIONS 		= 0x0d;
+static const __uint8_t CMD_SET_PARAMETERS 		= 0x0e;
+static const __uint8_t CMD_LIST_PARAMETERS 		= 0x0f;
+static const __uint8_t CMD_TEMPERATURE_REPORT 		= 0x10;
+static const __uint8_t CMD_VERSION 			= 0x11;
+static const __uint8_t CMD_CAL_REPORT 			= 0x12;
+static const __uint8_t CMD_SET_CALIBRATION 		= 0x13;
+static const __uint8_t CMD_CLEAR_CALIBRATION 		= 0x14;
+static const __uint8_t CMD_CHANGE_SCREEN 		= 0x15;
+static const __uint8_t CMD_SET_BRIGHTNESS 		= 0x16;
+static const __uint8_t CMD_RESPONSE 			= 0x80;
 
-const __uint8_t CMD_STATUS_SUCC			= 0x01;
+static const __uint8_t CMD_STATUS_SUCC			= 0x01;
 
 // Upgrade status                                                                                                                                                                                              
-const __uint8_t UPGRADE_CONTINUE 		= 0;
-const __uint8_t UPGRADE_BOOTCOM_ERROR 		= 1;
-const __uint8_t UPGRADE_CRC_ERROR 		= 2;
-const __uint8_t UPGRADE_ERASE_ERROR 		= 3;
-const __uint8_t UPGRADE_FLASH_ERROR 		= 4;
-const __uint8_t UPGRADE_OVERFLOW_ERROR 		= 5;
-const __uint8_t UPGRADE_SUCCESS 		= 16;
+static const __uint8_t UPGRADE_CONTINUE 		= 0;
+static const __uint8_t UPGRADE_BOOTCOM_ERROR 		= 1;
+static const __uint8_t UPGRADE_CRC_ERROR 		= 2;
+static const __uint8_t UPGRADE_ERASE_ERROR 		= 3;
+static const __uint8_t UPGRADE_FLASH_ERROR 		= 4;
+static const __uint8_t UPGRADE_OVERFLOW_ERROR 		= 5;
+static const __uint8_t UPGRADE_SUCCESS 			= 16;
 
 // options for cmd_change_screen                                                                                                                                                                               
-const __uint8_t SCREEN_MAIN 			= 0;
-const __uint8_t SCREEN_SETTINGS 		= 1;
+static const __uint8_t SCREEN_MAIN 			= 0;
+static const __uint8_t SCREEN_SETTINGS 			= 1;
 
 typedef void (*cb_upgrade_progress) (__uint8_t);
 
