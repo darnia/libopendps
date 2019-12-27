@@ -14,11 +14,12 @@ set(DPSCTL_SRCS
 add_executable( dpsctl ${DPSCTL_SRCS} )
 set_target_properties(dpsctl PROPERTIES COMPILE_FLAGS "-Wall -Wformat-nonliteral")
 set_target_properties(opendps PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
+set_target_properties(opendps PROPERTIES PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/opendps/opendps.h)
 target_include_directories (opendps PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(dpsctl LINK_PUBLIC opendps)
 
 configure_file(opendps.pc.in opendps.pc @ONLY)
 
 install(FILES ${CMAKE_BINARY_DIR}/opendps.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
-install(TARGETS opendps LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS opendps LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opendps/)
 install(TARGETS dpsctl DESTINATION bin)
