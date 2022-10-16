@@ -1,0 +1,21 @@
+kind: pipeline
+type: docker
+name: build
+
+trigger:
+  event:
+  - push
+  - custom
+  - pull_request
+  - rollback
+
+steps:
+- name: build
+  image: gcc
+  commands:
+  - apt-get update
+  - apt-get install -y cmake
+  - test ! -d build && mkdir build
+  - cd build
+  - cmake --fresh ..
+  - make
